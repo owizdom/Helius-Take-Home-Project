@@ -49,7 +49,7 @@ During my project, I uncovered several particularly interesting queries spanning
     
     - **ClickHouse Configuration Display** showing:
       - Username: `default`
-      - Password: (your configured password)
+      - Password: (your configured password) -> defaults to `solana123` if not set
       - Database: `solana`
       - Dashboard URL: `http://localhost:8123/play`
     
