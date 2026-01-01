@@ -6,6 +6,8 @@ I recorded and uploaded a 35-minute demo video that walks through my take-home p
 
 **I do naturally stutter at times, so I appreciate your patience while watching. Thanks very much for taking the time to review it.**
 
+Here's the Official Demo video for my take-home project: 
+
 [![Official Demo](https://github.com/user-attachments/assets/0c00590e-9415-417a-823a-01b1f30703f9)](https://youtu.be/1rToDHcUTK8)
 
 
