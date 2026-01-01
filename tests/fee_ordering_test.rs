@@ -53,10 +53,10 @@ fn test_fee_ordering_single_transaction() {
 fn test_fee_ordering_compute_budget_percentage() {
     // Test compute budget usage calculation
     let transactions = vec![
-        Transaction { slot: 1000, position: 1, signature: "sig1".to_string(), recent_blockhash: "bh1".to_string(), fee: 5000, failed: 0, has_compute_budget: 1, is_vote: 0, is_system: 0, program_ids: vec![] },
-        Transaction { slot: 1000, position: 2, signature: "sig2".to_string(), recent_blockhash: "bh2".to_string(), fee: 5000, failed: 0, has_compute_budget: 1, is_vote: 0, is_system: 0, program_ids: vec![] },
-        Transaction { slot: 1000, position: 3, signature: "sig3".to_string(), recent_blockhash: "bh3".to_string(), fee: 5000, failed: 0, has_compute_budget: 0, is_vote: 0, is_system: 0, program_ids: vec![] },
-        Transaction { slot: 1000, position: 4, signature: "sig4".to_string(), recent_blockhash: "bh4".to_string(), fee: 5000, failed: 0, has_compute_budget: 0, is_vote: 0, is_system: 0, program_ids: vec![] },
+        Transaction { slot: 1000, position: 1, signature: "sig1".to_string(), recent_blockhash: "bh1".to_string(), fee: 5000, failed: 0, has_compute_budget: 1, is_vote: 0, is_system: 0, program_ids: vec![], landing_service: String::new(), tip_recipient: String::new(), tip_amount: 0 },
+        Transaction { slot: 1000, position: 2, signature: "sig2".to_string(), recent_blockhash: "bh2".to_string(), fee: 5000, failed: 0, has_compute_budget: 1, is_vote: 0, is_system: 0, program_ids: vec![], landing_service: String::new(), tip_recipient: String::new(), tip_amount: 0 },
+        Transaction { slot: 1000, position: 3, signature: "sig3".to_string(), recent_blockhash: "bh3".to_string(), fee: 5000, failed: 0, has_compute_budget: 0, is_vote: 0, is_system: 0, program_ids: vec![], landing_service: String::new(), tip_recipient: String::new(), tip_amount: 0 },
+        Transaction { slot: 1000, position: 4, signature: "sig4".to_string(), recent_blockhash: "bh4".to_string(), fee: 5000, failed: 0, has_compute_budget: 0, is_vote: 0, is_system: 0, program_ids: vec![], landing_service: String::new(), tip_recipient: String::new(), tip_amount: 0 },
     ];
     
     let result = analyze_fee_landscape(&transactions, 1000, 1234567890);
