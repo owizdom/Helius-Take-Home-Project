@@ -14,7 +14,7 @@ During my project, I uncovered several particularly interesting queries spanning
 
     1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9 are currently overcharging users in these blocks by over 15x. At scale, they are likely to become among the top programs imposing the highest fees on users.
     2. The landing service that handled the most transactions in the analyzed Solana block is Jito Tip1 (T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt), along with other tip services such as JitoTip5.
-    3. In the analyzed block, system transaction types on Solana generated the most revenue, despite representing a smaller share of the overall transaction volume.
+    3. In the analyzed block, system transaction types on Solana generated the most revenue, despite representing a smaller share (13%) of the overall transaction volume.
     4. Inter-block transaction latency was around 0.02 seconds, and intra-block latency averaged between 0.33 and 0.44 seconds.
 
 ## How to Run
