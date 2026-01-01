@@ -1,5 +1,8 @@
 # Solana Block Analysis System
 
+<img width="3840" height="3840" alt="image" src="https://github.com/user-attachments/assets/56421f97-8d97-475a-812a-f669dc737418" />
+
+
 A lightweight Rust application that ingests Solana block data and extracts meaningful signals about transaction landing, scheduling, and fees, among other things, for research purposes.
 
 I recorded and uploaded a 35-minute demo video that walks through my take-home project. In the video, I explain the overall schema system design, break down three sample queries, and run the system live while detailing the extraction logic behind each result and defending my findings.**
