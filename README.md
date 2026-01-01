@@ -67,7 +67,7 @@ cargo test --test primary_program_test
 
 ## Schema Design
 
-The system uses **ClickHouse** for data storage which is usd for further analysis. These schemas form the backbone of my signal queries, giving every analysis a solid, reliable foundation and making it possible to extract insights cleanly and efficiently:
+The system uses **ClickHouse** for data storage which is used for further analysis. These schemas form the backbone of my signal queries, giving every analysis a solid, reliable foundation and making it possible to extract insights cleanly and efficiently:
 
 ### 1. `bundling_analysis`
 **Why I Chose This**: After studying more on Solana blocks, this was the first part that made me think. Being able to figure out in what manner a block is landed—whether through Jito bundles, direct leader inclusion, or other MEV infrastructure—is critical for understanding validator behavior and their role in the Solana network. This analysis is essential for MEV research on Solana, as it enables detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
