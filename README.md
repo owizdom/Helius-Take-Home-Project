@@ -10,6 +10,7 @@ Here's the Official Demo video for my take-home project:
 
 [![Official Demo](https://github.com/user-attachments/assets/0c00590e-9415-417a-823a-01b1f30703f9)](https://youtu.be/1rToDHcUTK8)
 
+**This image is clickable and links to the full demo.**
 
 ## Interesting Findings
 
