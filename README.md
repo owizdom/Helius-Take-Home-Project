@@ -128,7 +128,7 @@ While analyzing Solana fees, I realized something subtle but important: total fe
 
 This signal is built around that idea.
 
-Instead of rewarding scale, my signal looks at per-transaction cost, zooming in on p90 and p99 fee behavior and normalizing it against transaction volume. The result is a clearer view of programs where users consistently pay more than they should, even when demand doesn’t justify it. These aren’t one-off spikes or congestion artifacts.
+My signal looks at per-transaction cost, zooming in on p90 and p99 fee behavior and normalizing it against transaction volume. The result is a clearer view of programs where users consistently pay more than they should, even when demand doesn’t justify it. These aren’t one-off spikes or congestion artifacts.
 
 For teams, this signal highlights where UX and fee mechanics are leaking value and silently taxing users. For analysts, it separates true demand-driven fees from inefficiencies, poor instruction design, or unnecessary compute usage.
 
@@ -157,7 +157,6 @@ Understanding this matters because these fees aren’t always driven by market c
 
 For builders, it’s a lever to improve swap UX and reduce hidden costs. For analysts, it exposes where fee pressure originates after the routing decision is made.
 
-### 4. **
 
 **Note:** Earlier this year, I wrote an article titled “Economic Implications of SIMD-253” exploring how a proposed improvement to Solana’s fee market could reshape network economics. In it, I break down SIMD-253, a governance proposal designed to introduce a fee controller and a target Compute Unit (CU) utilization limit to the network’s existing first-price auction fee model, a mechanism that currently forces users to guess how much to bid for inclusion, often resulting in overpayment and poor UX.
 
@@ -190,24 +189,3 @@ If I had more time, this is what I would build:
 - **Validator Behavior Classification:** Track how validators include transactions and bundles to see which ones follow the rules and which might be prioritizing private orderflow.
 - **Frontend Interface:** Build a simple web dashboard to visualize, making the data easier to explore and analyze.
 - **Build a model to continuously learn new fee and routing patterns over time, catching emerging strategies before they show up in aggregate metrics.**
-
-## Project Structure
-
-```
-src/
-├── core/              # Core functionality
-│   ├── main.rs        # Entry point, streaming loop
-│   ├── block_fetcher.rs    # Block fetching and storage
-│   ├── block_analyzer.rs   # Analysis orchestration
-│   └── transaction_parser.rs # Transaction parsing
-└── analyzer/          # Analysis modules
-    ├── bundling.rs    # Bundle detection
-    ├── fee_landscape.rs    # Fee analysis
-    ├── program_fee.rs      # Program fee analysis
-    ├── fee_by_type.rs      # Transaction type analysis
-    ├── types.rs            # Shared types
-    └── utils.rs            # Utilities (program mapping, etc.)
-
-tests/                 # Integration tests
-clickhouse/            # Database schemas
-```
