@@ -4,6 +4,10 @@ A lightweight Rust application that ingests Solana block data and extracts meani
 
 # Interesting Findings
 
+**I created a 10-minute video explaining my extraction logic and walking through the analysis in real-time. Quick side note: I sometimes stutter, so please be patient; I may take a moment or two to get my words out.**
+
+[Official Demo Video](https://www.youtube.com/watch?v=bnSFTV40JbM)
+
 **Note: These findings were obtained through analysis using the queries defined in `example_queries.sql`.**
 
 During my analysis, I identified several particularly interesting patterns across 1345 blocks (390,804,664 to 390,806,009), including the following:
