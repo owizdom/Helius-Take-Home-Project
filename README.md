@@ -42,7 +42,7 @@ Around 92% of Jito transactions appear in bundles, with most bundles containing 
 ## How to Run
 
 ### Prerequisites
-- Docker and Docker Compose
+- Ensure Docker Desktop is open before running the `docker-compose up -d` command
 - Rust (latest stable version)
 - Solana RPC access (the code uses a GetBlock RPC endpoint and Alchemy Solana RPC endpoint as a Fallback mechanism)
 
