@@ -19,7 +19,7 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 3. One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. Despite producing a similar number of blocks, some validators consistently processed far more transactions than others. 
 
-    For example, J6etcxDdYjPHrtyvDXrbCkx3q9W1UjMj1vy1jBFPJEbK produced eight blocks but handled nearly 10,000 transactions, while other validators producing four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators surfaced transactions with a maximum age of up to 151 slots, indicating that older transactions were still being landed under congestion. 
+    For example, `JupmVLmA8RoyTUbTMMuTtoPWHEiNQobxgTeGTrPNkzT` produced 11 blocks yet handled nearly 12,000 transactions, including 8 older transactions, while other validators producing only four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators included transactions with a maximum age of up to 151 slots, showing that under congestion, significantly older transactions can still make it into blocks. This underscores how validator-level differences in block production and transaction intake can meaningfully influence latency and fairness on the network. 
 
     This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 
