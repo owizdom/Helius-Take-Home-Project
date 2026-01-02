@@ -29,10 +29,6 @@ In the swap-focused scope of this analysis, the Jito landing service landed the 
 
 Jito collectively landed over 53% of th transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
-This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
-
-Note: I was inspired to write this query by reading Sir Benedict work on PFOF
-
 ## 3. Detecting Jito Bundles
 
 <img width="1714" height="726" alt="Screenshot 2026-01-02 at 13 22 55" src="https://github.com/user-attachments/assets/5cb3e1a9-547b-46f1-9fb0-ab50ce163f3b" />
