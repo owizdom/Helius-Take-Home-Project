@@ -25,15 +25,15 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 <img width="1709" height="751" alt="Screenshot 2026-01-02 at 13 30 31" src="https://github.com/user-attachments/assets/817944b5-4348-4be4-a9f5-a2839970d900" />
 
-In the swap-focused scope of this analysis, the Jito landing service landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
+In the swap-focused scope of this analysis, the Jito landing service landed the highest number of transactions. Jito collectively landed over 53% of the transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks. 
 
-Jito collectively landed over 53% of the transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+Due to current project limitations, I wasn’t able to compute the exact ratio directly; however, it can be inferred from the image above.
 
 ## 3. Detecting Jito Bundles
 
 <img width="1714" height="726" alt="Screenshot 2026-01-02 at 13 22 55" src="https://github.com/user-attachments/assets/5cb3e1a9-547b-46f1-9fb0-ab50ce163f3b" />
 
-Around 92% of Jito transactions appear in bundles, with most bundles containing 3–4 sequential transactions. This demonstrates a deliberate strategy of grouping transactions, which can influence transaction ordering, fee distribution, and block dynamics. The high consistency of these bundles suggests a structured approach rather than random sequencing, pointing toward optimization for both execution efficiency and potential MEV capture.
+Jito routes transactions using an explicit bundling mechanism, with the majority of observed bundles containing 3 to 4 sequential transactions. The consistency of this structure suggests deliberate optimization of execution and blockspace usage rather than incidental grouping.
 
 ## How to Run
 
@@ -55,7 +55,7 @@ Around 92% of Jito transactions appear in bundles, with most bundles containing 
 
 2. **Run the application:**
    ```bash
-   cargo run --bin main
+   cargo run main
    ```
 
 3. **Interactive Setup Menu**
@@ -102,7 +102,15 @@ cargo test --test primary_program_test
 
 ## Schema Design
 
-The system uses **ClickHouse** for data storage, which is used for further analysis. These schemas form the backbone of my signal queries, giving every analysis a solid, reliable foundation and making it possible to extract insights cleanly and efficiently:
+I designed the database schema with a one-schema-per-signal approach, where each table is purpose-built to answer a specific research question. Rather than creating a monolithic transaction table that would require complex joins and aggregations for every query, I pre-aggregated data at the block level into focused tables that directly support the signals I wanted to extract. This design philosophy ensures that:
+
+- **Query Performance**: Each analytical query can read from a single, optimized table without expensive joins or real-time aggregations
+- **Signal Clarity**: Each schema directly maps to a specific research question, making it immediately clear what data is available and how to use it
+- **Maintainability**: Changes to one signal's schema don't affect others, allowing independent iteration on different research directions
+
+These schemas form the backbone of my signal queries, giving every analysis a solid, reliable foundation and making it possible to extract insights cleanly and efficiently:
+
+These schemas form the backbone of my signal queries, giving every analysis a solid, reliable foundation and making it possible to extract insights cleanly and efficiently:
 
 ### 1. `bundling_analysis`
 **Why I Chose This**: After studying more on Solana blocks, this was the first part that made me think. Being able to figure out in what manner a block is landed—whether through Jito bundles, direct leader inclusion, or other MEV infrastructure—is critical for understanding validator behaviour and their role in the Solana network. This analysis is essential for MEV research on Solana, as it enables the detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
