@@ -170,19 +170,23 @@ pub fn get_primary_program(program_ids: &[String]) -> Option<String> {
 pub fn get_transaction_type(transaction: &Transaction) -> String {
     if transaction.is_vote == 1 {
         "vote".to_string()
-    } else if transaction.is_system == 1 {
-        "system".to_string()
-    } else if let Some(primary_program) = get_primary_program(&transaction.program_ids) {
-        let (prog_type, _) = categorize_program_type(&primary_program);
-        match prog_type {
-            "SPL Token" => "spl_token".to_string(),
-            "Jupiter" => "jupiter".to_string(),
-            "Raydium" => "raydium".to_string(),
-            "Orca" | "Orca Whirlpool" => "orca".to_string(),
-            _ => "other".to_string(),
-        }
     } else {
-        "other".to_string()
+        // Only categorize as "system" if transaction ONLY has System/ComputeBudget programs
+        // (i.e., no other meaningful programs)
+        if let Some(primary_program) = get_primary_program(&transaction.program_ids) {
+            let (prog_type, _) = categorize_program_type(&primary_program);
+            match prog_type {
+                "SPL Token" => "spl_token".to_string(),
+                "Jupiter" => "jupiter".to_string(),
+                "Raydium" => "raydium".to_string(),
+                "Orca" | "Orca Whirlpool" => "orca".to_string(),
+                _ => "other".to_string(),
+            }
+        } else {
+            // No primary program found - this means only System/ComputeBudget programs
+            // This is a true "system" transaction
+            "system".to_string()
+        }
     }
 }
 

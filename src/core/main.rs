@@ -19,13 +19,42 @@ async fn init_clickhouse() -> Client {
         .with_password(&password)
 }
 
+async fn execute_schema_file(client: &Client, schema_sql: &str, table_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Process SQL: remove comments, USE statements, and replace table name with solana.table_name
+    let sql = schema_sql
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.starts_with("--") && !trimmed.is_empty()
+        })
+        .map(|line| {
+            let trimmed = line.trim();
+            // Replace CREATE TABLE line with solana.table_name
+            if trimmed.starts_with("CREATE TABLE IF NOT EXISTS") {
+                format!("CREATE TABLE IF NOT EXISTS solana.{}", table_name)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+        .replace("USE solana;", "")
+        .trim()
+        .to_string();
+    
+    if !sql.is_empty() {
+        client.query(&sql).execute().await?;
+    }
+    Ok(())
+}
+
 async fn initialize_database(client: &Client) -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing database...");
     
     // Create database if it doesn't exist
     client.query("CREATE DATABASE IF NOT EXISTS solana").execute().await?;
     
-    // Create blocks table
+    // Create blocks table (no schema file exists for it)
     client.query(
         "CREATE TABLE IF NOT EXISTS solana.blocks
         (
@@ -43,80 +72,21 @@ async fn initialize_database(client: &Client) -> Result<(), Box<dyn std::error::
     ).execute().await?;
     println!("  Created table: blocks");
     
-    // Create bundling_analysis table
-    client.query(
-        "CREATE TABLE IF NOT EXISTS solana.bundling_analysis
-        (
-            slot UInt64,
-            blockhash String,
-            block_time UInt64,
-            unique_blockhashes UInt32,
-            largest_blockhash_group UInt32,
-            largest_blockhash String,
-            validator_key String,
-            landing_service String DEFAULT '',
-            landing_service_count UInt32 DEFAULT 0,
-            created_at DateTime DEFAULT now()
-        )
-        ENGINE = MergeTree()
-        ORDER BY (slot)
-        PARTITION BY toYYYYMM(toDateTime(block_time))"
-    ).execute().await?;
+    // Execute schema files
+    execute_schema_file(client, include_str!("../../clickhouse/schema_bundling.sql"), "bundling_analysis").await?;
     println!("  Created table: bundling_analysis");
     
-    // Create fee_landscape table
-    client.query(
-        "CREATE TABLE IF NOT EXISTS solana.fee_landscape
-        (
-            slot UInt64,
-            block_time UInt64,
-            fee_avg Float64,
-            compute_budget_percent Float32,
-            fee_ordering_correlation Float32,
-            created_at DateTime DEFAULT now()
-        )
-        ENGINE = MergeTree()
-        ORDER BY (slot)
-        PARTITION BY toYYYYMM(toDateTime(block_time))"
-    ).execute().await?;
+    execute_schema_file(client, include_str!("../../clickhouse/schema_fees.sql"), "fee_landscape").await?;
     println!("  Created table: fee_landscape");
     
-    // Create program_fee_analysis table
-    client.query(
-        "CREATE TABLE IF NOT EXISTS solana.program_fee_analysis
-        (
-            slot UInt64,
-            block_time UInt64,
-            program_type String,
-            program_name String,
-            transaction_count UInt32,
-            total_fee UInt64,
-            min_fee UInt64,
-            max_fee UInt64,
-            created_at DateTime DEFAULT now()
-        )
-        ENGINE = MergeTree()
-        ORDER BY (slot, program_type)
-        PARTITION BY toYYYYMM(toDateTime(block_time))"
-    ).execute().await?;
+    execute_schema_file(client, include_str!("../../clickhouse/schema_program_fees.sql"), "program_fee_analysis").await?;
     println!("  Created table: program_fee_analysis");
     
-    // Create fee_by_transaction_type table
-    client.query(
-        "CREATE TABLE IF NOT EXISTS solana.fee_by_transaction_type
-        (
-            slot UInt64,
-            block_time UInt64,
-            transaction_type String,
-            transaction_count UInt32,
-            total_fee UInt64,
-            created_at DateTime DEFAULT now()
-        )
-        ENGINE = MergeTree()
-        ORDER BY (slot, transaction_type)
-        PARTITION BY toYYYYMM(toDateTime(block_time))"
-    ).execute().await?;
+    execute_schema_file(client, include_str!("../../clickhouse/schema_fee_by_type.sql"), "fee_by_transaction_type").await?;
     println!("  Created table: fee_by_transaction_type");
+    
+    execute_schema_file(client, include_str!("../../clickhouse/schema_transaction_age.sql"), "transaction_age_analysis").await?;
+    println!("  Created table: transaction_age_analysis");
     
     println!("Database initialized.\n");
     Ok(())
@@ -130,6 +100,7 @@ async fn clear_database(client: &Client) -> Result<(), Box<dyn std::error::Error
         "program_fee_analysis",
         "fee_landscape",
         "fee_by_transaction_type",
+        "transaction_age_analysis",
     ];
     
     for table in tables {
@@ -137,6 +108,15 @@ async fn clear_database(client: &Client) -> Result<(), Box<dyn std::error::Error
             Ok(_) => println!("  Cleared table: {}", table),
             Err(e) => eprintln!("  Warning: Failed to clear table {}: {:?}", table, e),
         }
+    }
+    
+    // Drop old/removed tables if they exist
+    let drop_queries = vec![
+        "DROP TABLE IF EXISTS solana.landing_method_analysis",
+    ];
+    
+    for query in drop_queries {
+        let _ = client.query(query).execute().await;
     }
     
     // Ensure bundling_analysis table has the correct columns

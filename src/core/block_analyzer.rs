@@ -6,6 +6,7 @@ use crate::analyzer::bundling::analyze_bundling;
 use crate::analyzer::fee_landscape::analyze_fee_landscape;
 use crate::analyzer::program_fee::analyze_program_fees;
 use crate::analyzer::fee_by_type::analyze_fee_by_type;
+use crate::analyzer::transaction_age::analyze_transaction_age;
 
 async fn get_validator_key(rpc_client: &RpcClient, slot: u64, alchemy_key: &str) -> String {
     match rpc_client.get_slot_leaders(slot, 1) {
@@ -51,7 +52,7 @@ pub async fn analyze_block(
     let validator_key = get_validator_key(rpc_client, slot, alchemy_key).await;
 
     // Bundling analysis
-    let bundling_row = analyze_bundling(transactions, slot, blockhash.clone(), block_time, validator_key);
+    let bundling_row = analyze_bundling(transactions, slot, blockhash.clone(), block_time, validator_key.clone());
     insert_rows(client, "bundling_analysis", &[bundling_row]).await?;
 
     // Fee landscape analysis
@@ -65,6 +66,16 @@ pub async fn analyze_block(
     // Fee by transaction type analysis
     let fee_by_type_rows = analyze_fee_by_type(transactions, slot, block_time);
     insert_rows(client, "fee_by_transaction_type", &fee_by_type_rows).await?;
+
+    // Transaction age analysis
+    let transaction_age_row = analyze_transaction_age(
+        client,
+        transactions,
+        slot,
+        block_time,
+        validator_key.clone(),
+    ).await?;
+    insert_rows(client, "transaction_age_analysis", &[transaction_age_row]).await?;
 
     Ok(())
 }

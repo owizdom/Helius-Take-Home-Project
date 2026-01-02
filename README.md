@@ -2,24 +2,27 @@
 
 A lightweight Rust application that ingests Solana block data and extracts meaningful signals about transaction landing, scheduling, and fees, among other things, for research purposes.
 
-I recorded and uploaded a 35-minute demo video that walks through my take-home project. In the video, I explain the overall schema system design, break down three sample queries, and run the system live while detailing the extraction logic behind each result and defending my findings.**
-
-**I do naturally stutter at times, so I appreciate your patience while watching. Thanks very much for taking the time to review it.**
-
-Here's the Official Demo video for my take-home project: 
-
-[![Official Demo](https://github.com/user-attachments/assets/0c00590e-9415-417a-823a-01b1f30703f9)](https://youtu.be/1rToDHcUTK8)
-
-**This image is clickable and links to the full demo.**
-
 ## Interesting Findings
 
-During my project, I uncovered several particularly interesting queries spanning blocks 390,327,103 to 390,327,587, including the following:
+During my analysis, I identified several particularly interesting patterns across 358 blocks (390,697,210 to 390,697,568), including the following:
 
-    1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9 are currently overcharging users in these blocks by over 15x. At scale, they are likely to become among the top programs imposing the highest fees on users.
-    2. The landing service that handled the most transactions in the analyzed Solana block is Jito Tip1 (T1pyyaTNZsKv2WcRAB8oVnk93mLJw2XzjtVYqCsaHqt), along with other tip services such as JitoTip5.
-    3. In the analyzed block, system transaction types on Solana generated the most revenue, despite representing a smaller share (13%) of the overall transaction volume.
-    4. Inter-block transaction latency was around 0.02 seconds, and intra-block latency averaged between 0.33 and 0.44 seconds.
+1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks.
+
+In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
+
+Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning.
+
+    a. Pump.fun appeared in 307 blocks and processed 1,261 transactions, with an average fee of 183,030 lamports per transaction. Based on my analysis, the program overcharged users by 145.45%, resulting in a total excess cost of 136,760,625 lamports paid by users.
+    b. Flash appeared in 317 blocks and processed 1,207 transactions with an average fee of 710,410 lamports per transaction. Based on my analysis, the program overcharged users by 1000+%, resulting in a total excess cost of 779,661,341 lamports paid by users.
+
+2. Jito service landed the highest number of transactions in the analyzed Solana block; ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt. Other tip-related accounts, such as JitoTip5 or 3, also appear prominently; however, these are simply distinct Jito tip wallets used to reduce contention. In practice, they all route through the same Jito landing service rather than representing separate providers.
+
+3. One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. Despite producing a similar number of blocks, some validators consistently processed far more transactions than others. 
+
+For example, J6etcxDdYjPHrtyvDXrbCkx3q9W1UjMj1vy1jBFPJEbK produced eight blocks but handled nearly 10,000 transactions, while other validators producing four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators surfaced transactions with a maximum age of up to 151 slots, indicating that older transactions were still being landed under congestion. 
+
+This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
+
 
 ## How to Run
 
@@ -106,11 +109,21 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 - `total_fee`, `min_fee`, `max_fee`: Fee statistics
 
 ### 4. `fee_by_transaction_type`
-**Purpose**:Transaction types in Solana make it easier for users to understand and read what is happening on-chain, despite the Solana data being complex. Categorizing transactions in this way provides a high-level view of fee distribution across different transaction types, helping analysts and users grasp how the network operates.
+**Why I Chose This**:Transaction types in Solana make it easier for users to understand and read what is happening on-chain, despite the Solana data being complex. Categorizing transactions in this way provides a high-level view of fee distribution across different transaction types, helping analysts and users grasp how the network operates.
 
 **Key Fields**:
 - `transaction_type`: Category (vote, system, spl_token, jupiter, raydium, orca, other)
 - `transaction_count`, `total_fee`: Aggregated metrics
+
+### 5. `transaction_age_analysis`
+**Why I Chose This**: Understanding how validators handle transaction scheduling is critical for detecting potential manipulation or unfair behavior. This schema tracks transaction age by looking up when blockhashes were first created, allowing us to identify validators that include very old transactions in their blocks. This is important because validators playing games with transaction scheduling might prioritize their own old transactions or manipulate inclusion order, which can affect network fairness and user experience.
+
+**Key Fields**:
+- `validator_key`: Validator who built the block
+- `max_transaction_age_slots`: Oldest transaction age in slots (identifies how stale transactions can get)
+- `avg_transaction_age_slots`: Average transaction age in slots (shows typical backlog age)
+- `old_transaction_count`: Number of transactions older than 150 slots (identifies validators including very old transactions)
+- `total_transactions`: Total number of transactions in the block
 
 
 ### Design Decisions I Made.
@@ -121,42 +134,27 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 4. The program IDs and landing address are mapped manually to names for better interpretability
 5. The application is centred around a CLI-based approach, focusing on precision in data delivery, and it uses the default ClickHouse UI to query and view the data.
 
-## The Signals  I decided to Extract ( I did 3)
+## The Signals I Decided to Extract
 
-### 1. **The Solana Program that Overcharges Users**
+### 1. **Programs That Overcharge Users**
 
-While analyzing Solana fees, I realized something subtle but important: total fees alone don’t tell the real story. High fees can simply mean high usage. What actually matters is how expensive it is for a user to interact with a program each time.
+While analyzing Solana fees, I realized something subtle but important: total fees alone don't tell the real story. High fees can simply mean high usage. What actually matters is how expensive it is for a user to interact with a program each time.
 
-This signal is built around that idea.
+This signal identifies programs where users consistently pay more than they should, even after normalizing for congestion and transaction volume. During my analysis, I found that Pump.fun and FLASHX consistently cause users to pay significantly more in fees compared to comparable interactions in the same blocks.
 
-My signal looks at per-transaction cost, zooming in on p90 and p99 fee behavior and normalizing it against transaction volume. The result is a clearer view of programs where users consistently pay more than they should, even when demand doesn’t justify it. These aren’t one-off spikes or congestion artifacts.
+This analysis helps investigate how much services like Jito are middlemanning, as overpayment patterns can reveal the cost of routing through specific landing services.
 
-For teams, this signal highlights where UX and fee mechanics are leaking value and silently taxing users. For analysts, it separates true demand-driven fees from inefficiencies, poor instruction design, or unnecessary compute usage.
+### 2. **How Transactions Are Landing**
 
-### 2. **The Most Fee-Efficient Things to Do on Solana**
+Understanding how transactions land—whether through Jito bundles, direct to leader, or through specific RPCs—is critical for understanding validator behavior and their role in the Solana network. This signal tracks landing services and quantifies how much blockspace is routed through specific infrastructure.
 
-While breaking down Solana fee behavior, one pattern kept standing out: some activities turn usage into fees far more efficiently than others. This signal is designed to capture exactly that. Instead of treating fees or transaction volume in isolation, it normalizes fees by transaction activity, revealing which programs and transaction types extract the most value per unit of usage. In other words, it shows where demand actually translates into revenue, not just noise.
+This analysis is essential for MEV research on Solana, as it enables detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
 
-This matters because fees are behavioral.
+### 3. **Validator Transaction Scheduling Behavior**
 
-Users, bots, and market makers respond to cost structures. When an activity becomes fee-efficient, it attracts automation. When it isn’t, volume dries up or routes change. Tracking this signal over time surfaces where bots are likely to cluster next, where fee pressure will compound, and which programs are quietly becoming structural contributors to validator revenue.
+One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. This signal tracks how validators handle transaction scheduling, including whether they're playing games with transaction ordering or including very old transactions.
 
-For builders, it highlights which interactions are economically tight versus wasteful. For analysts, it provides an early signal of shifting incentives before they show up in raw volume or headline fees.
-
-
-### 3. **Which Swap Landings Cost Users the Most**
-
-While analyzing swap fees on Solana, it became clear that not all swap landings are equal. Beyond the DEX or route itself, where a transaction lands can materially change what users end up paying. This analysis isolates the specific landing services and addresses responsible for higher-than-average swap fees. Some landings consistently add extra cost through tips, prioritization fees, or routing choices designed to secure faster inclusion costs that are often invisible to users.
-
-Understanding this matters because these fees aren’t always driven by market conditions. In many cases, they’re structural overhead introduced by the landing path, not by the swap itself. By identifying which landing services cost users the most, this signal helps:
-
-    - optimize routing to avoid unnecessary fee leakage
-
-    - distinguish speed premiums from inefficiencies
-
-    - surface landings that quietly tax users at scale
-
-For builders, it’s a lever to improve swap UX and reduce hidden costs. For analysts, it exposes where fee pressure originates after the routing decision is made.
+This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 
 
 **Note:** Earlier this year, I wrote an article titled “Economic Implications of SIMD-253” exploring how a proposed improvement to Solana’s fee market could reshape network economics. In it, I break down SIMD-253, a governance proposal designed to introduce a fee controller and a target Compute Unit (CU) utilization limit to the network’s existing first-price auction fee model, a mechanism that currently forces users to guess how much to bid for inclusion, often resulting in overpayment and poor UX.
@@ -177,9 +175,7 @@ Looking back, this article was foundational for how I think about fee behavior a
 
 5. **The project does not include a dedicated frontend application. Instead, I operate the system through a terminal-based interface and rely on the ClickHouse UI for querying and visualization. This design choice prioritizes rapid iteration, while still allowing analysis without building and maintaining a full web frontend.**
 
-6. **The Rust implementation is not yet heavily optimized. This reflects the fact that I am still progressing through intermediate and advanced Rust development.**
-
-7. **Inline comments are currently minimal. This is a known limitation and a deliberate short-term trade-off made to prioritize rapid research iteration**
+6. **Inline comments are currently minimal. This is a known limitation and a deliberate short-term trade-off made to prioritize rapid research iteration**
 
 
 ## What I'd Build Next
