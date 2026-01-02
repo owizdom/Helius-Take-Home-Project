@@ -2,37 +2,40 @@
 
 A lightweight Rust application that ingests Solana block data and extracts meaningful signals about transaction landing, scheduling, and fees, among other things, for research purposes.
 
-## Interesting Findings
+# Interesting Findings
 
 **Note: These findings were obtained through analysis using the queries defined in `example_queries.sql`.**
 
-During my analysis, I identified several particularly interesting patterns across 358 blocks (390,697,210 to 390,697,568), including the following:
+During my analysis, I identified several particularly interesting patterns across 1345 blocks (390,804,664 to 390,806,009), including the following:
 
-1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks.
+## 1. Solana Program That Overcharges
 
-    In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
+Screenshot 2026-01-02 at 13.13.43.png
+
+The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks, amongst others like King...cb7T and term...ZzN3.
+
+In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
 
 Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning. The query for this analysis is in the `example_queries.sql`
 
-    a. Pump.fun (program ID 6EF8r...F6P): appeared in 307 blocks, 1,261 txns, avg fee 183,030 lamports. Calculated to be +145.5% overcharge above normal, costing users an extra ~136,760,625 lamports in total.
-    b. FlashX (FLASHX8D...txB9): appeared in 317 blocks, 1,207 txns, avg fee 710,410 lamports. Overcharged by ~1000%+, totaling ~779,661,341 lamports extra paid.
+    a. Pump.fun (program ID 6EF8r...F6P): appeared in 1177 blocks, 3,715 txns, avg fee 188,031 lamports. Calculated to be 313.33% overcharge above normal, costing users an extra ~529,531,554 lamports in total.
+    b. FlashX (FLASHX8D...txB9): appeared in 1091 blocks, 2,886 txns, avg fee 541,454 lamports. Overcharged by ~1263%+, totaling ~144,012,706 lamports extra paid.
 
-2.  In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
+## 2. Jito Landing Service Dominance in Swap Transactions
 
-    Furthermore, the leading landing service(87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743) accounted for 22% of all blocks landed during the analyzed window, while Jito collectively landed over 40% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+Screenshot 2026-01-02 at 13.30.31.png
 
-    This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
-     
+In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
-3. One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. Despite producing a similar number of blocks, some validators consistently processed far more transactions than others. 
+Jito collectively landed over 54% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
-    For example, Jupiter `JupmVLmA8RoyTUbTMMuTtoPWHEiNQobxgTeGTrPNkzT` produced 11 blocks yet handled nearly 12,000 transactions, including 8 older transactions, while other validators producing only four blocks processed closer to 4,000–5,000 transactions, including an average of 5 or more transactions in blocks being built.
-    
-    This raises a natural question: why are some validators repeatedly including older transactions?
-The analysis indicates that this behavior cannot be explained by higher fees, suggesting that factors other than fee maximization such as landing service behaviour are driving transaction inclusion. We compared fee distributions between well-ordered and poorly-ordered blocks and found no significant difference hence ruling out fees as the cause of including old blocks
+This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
 
-    At the same time, all validators included transactions with a maximum age of up to 151 slots, showing that under congestion, significantly older transactions can still make it into blocks. This underscores how validator-level differences in block production and transaction intake can meaningfully influence latency and fairness on the network. 
+## 3. Detecting Jito Bundles
 
+Screenshot 2026-01-02 at 13.22.55.png
+
+Around 92% of Jito transactions appear in bundles, with most bundles containing 3–4 sequential transactions. This demonstrates a deliberate strategy of grouping transactions, which can influence transaction ordering, fee distribution, and block dynamics. The high consistency of these bundles suggests a structured approach rather than random sequencing, pointing toward optimization for both execution efficiency and potential MEV capture.
 
 ## How to Run
 

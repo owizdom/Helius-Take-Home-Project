@@ -2,32 +2,14 @@
 SELECT 
     program_name,
     program_type,
-    
-    -- Transaction volume
     SUM(transaction_count) as total_transactions,
-    COUNT(DISTINCT slot) as blocks_appeared_in,
-    
-    -- Fee statistics (high fees = potential overcharging)
-    ROUND(quantile(0.5)(min_fee), 0) as p50_fee_lamports,
-    ROUND(quantile(0.9)(max_fee), 0) as p90_fee_lamports,
-    ROUND(quantile(0.99)(max_fee), 0) as p99_fee_lamports,
-    
-    -- Average fees
     ROUND(AVG(total_fee / transaction_count), 0) as avg_fee_per_tx_lamports,
-    ROUND(AVG(max_fee), 0) as avg_max_fee_lamports,
-    
-    -- Total fees
-    SUM(total_fee) as total_fees_lamports,
-    
-    -- Time range
-    MIN(toDateTime(block_time)) as first_seen,
-    MAX(toDateTime(block_time)) as last_seen
-    
+    SUM(total_fee) as total_fees_lamports
 FROM solana.program_fee_analysis
 GROUP BY program_name, program_type
 HAVING total_transactions > 1000
     AND quantile(0.9)(max_fee) > 100000  -- High p90 fees (potential overcharging)
-ORDER BY p99_fee_lamports DESC
+ORDER BY total_fees_lamports DESC
 LIMIT 30;
 
 -- ============================================================================
@@ -56,8 +38,48 @@ WHERE ftt.transaction_type IN ('jupiter', 'raydium', 'orca')  -- DEX swaps
 GROUP BY landing_service, ftt.transaction_type
 ORDER BY swap_fees_lamports DESC;
 
+
+--3. -- Landing Service Dominance Analysis
+
+WITH landing_service_stats AS (
+    SELECT 
+        CASE 
+            WHEN landing_service = 'Jito' THEN 'Jito'
+            WHEN landing_service LIKE 'Unknown:%' THEN landing_service
+            WHEN landing_service = 'No Tip' THEN 'No Tip'
+            ELSE landing_service
+        END as landing_service,
+        COUNT(DISTINCT slot) as blocks_landed,
+        SUM(landing_service_count) as total_transactions,
+        ROUND(AVG(largest_bundle_size), 2) as avg_bundle_size
+    FROM solana.bundling_analysis
+    WHERE landing_service != 'No Tip'  -- Exclude non-tipped transactions
+    GROUP BY landing_service
+),
+total_stats AS (
+    SELECT 
+        SUM(blocks_landed) as total_blocks,
+        SUM(total_transactions) as total_transactions
+    FROM landing_service_stats
+)
+SELECT 
+    lss.landing_service,
+    lss.blocks_landed,
+    lss.total_transactions,
+    lss.avg_bundle_size,
+    ROUND(lss.blocks_landed * 100.0 / ts.total_blocks, 2) as pct_of_blocks,
+    ROUND(lss.total_transactions * 100.0 / ts.total_transactions, 2) as pct_of_transactions,
+    CASE 
+        WHEN lss.landing_service = 'Jito' THEN '✓ Jito (Dominant)'
+        ELSE ''
+    END as note
+FROM landing_service_stats lss
+CROSS JOIN total_stats ts
+ORDER BY lss.blocks_landed DESC
+LIMIT 10;
+
 -- ============================================================================
--- 3. Pump.fun Overpayment Analysis (Jito Middlemanning Signal)
+-- 4. Pump.fun Overpayment Analysis (Jito Middlemanning Signal)
 
 WITH pump_fun_stats AS (
     SELECT 
@@ -67,13 +89,13 @@ WITH pump_fun_stats AS (
         transaction_count,
         total_fee / NULLIF(transaction_count, 0) as avg_fee_per_tx
     FROM solana.program_fee_analysis
-    WHERE program_name = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
+    WHERE program_name = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P' -- FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9
 ),
 overall_avg AS (
     SELECT 
         AVG(total_fee / NULLIF(transaction_count, 0)) as overall_avg_fee_per_tx
     FROM solana.program_fee_analysis
-    WHERE program_name != '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
+    WHERE program_name != '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P' -- FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9
 )
 SELECT 
     'Pump.fun' as program,
@@ -88,7 +110,7 @@ SELECT
 FROM pump_fun_stats;
 
 -- ============================================================================
--- 4. Jito Bundle Statistics
+-- 5. Jito Bundle Statistics
 
 SELECT 
     -- Bundle detection summary
