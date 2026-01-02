@@ -25,9 +25,9 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 <img width="1709" height="751" alt="Screenshot 2026-01-02 at 13 30 31" src="https://github.com/user-attachments/assets/817944b5-4348-4be4-a9f5-a2839970d900" />
 
-In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
+In the swap-focused scope of this analysis, the Jito landing service landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
-Jito collectively landed over 54% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+Jito collectively landed over 53% of th transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
 This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
 
