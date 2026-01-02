@@ -10,14 +10,14 @@ During my analysis, I identified several particularly interesting patterns acros
 
     In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
 
-Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning.
+Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning. The query for this analysis is in the `example_queries.sql`
 
     a. Pump.fun appeared in 307 blocks and processed 1,261 transactions, with an average fee of 183,030 lamports per transaction. Based on my analysis, the program overcharged users by 145.45%, resulting in a total excess cost of 136,760,625 lamports paid by users.
     b. Flash appeared in 317 blocks and processed 1,207 transactions with an average fee of 710,410 lamports per transaction. Based on my analysis, the program overcharged users by 1000+%, resulting in a total excess cost of 779,661,341 lamports paid by users.
 
 2.  In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
-    Furthermore, the leading landing service(87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743) accounted for 22% of all blocks built during the analyzed window, while Jito collectively landed over 40% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+    Furthermore, the leading landing service(87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743) accounted for 22% of all blocks landed during the analyzed window, while Jito collectively landed over 40% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
     This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
      
