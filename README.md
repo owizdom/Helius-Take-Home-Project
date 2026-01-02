@@ -8,7 +8,7 @@ During my analysis, I identified several particularly interesting patterns acros
 
 1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks.
 
-In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
+    In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
 
 Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning.
 
@@ -19,9 +19,9 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 3. One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. Despite producing a similar number of blocks, some validators consistently processed far more transactions than others. 
 
-For example, J6etcxDdYjPHrtyvDXrbCkx3q9W1UjMj1vy1jBFPJEbK produced eight blocks but handled nearly 10,000 transactions, while other validators producing four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators surfaced transactions with a maximum age of up to 151 slots, indicating that older transactions were still being landed under congestion. 
+    For example, J6etcxDdYjPHrtyvDXrbCkx3q9W1UjMj1vy1jBFPJEbK produced eight blocks but handled nearly 10,000 transactions, while other validators producing four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators surfaced transactions with a maximum age of up to 151 slots, indicating that older transactions were still being landed under congestion. 
 
-This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
+    This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 
 
 ## How to Run
