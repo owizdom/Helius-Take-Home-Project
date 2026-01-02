@@ -149,12 +149,6 @@ Understanding how transactions land—whether through Jito bundles, direct to le
 
 This analysis is essential for MEV research on Solana, as it enables detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
 
-### 3. **Validator Transaction Scheduling Behavior**
-
-One interesting validator-level signal that emerged is how unevenly transaction load is distributed across block producers. This signal tracks how validators handle transaction scheduling and block production.
-
-This highlights meaningful differences in how validators absorb transaction volume, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
-
 
 **Note:** Earlier this year, I wrote an article titled “Economic Implications of SIMD-253” exploring how a proposed improvement to Solana’s fee market could reshape network economics. In it, I break down SIMD-253, a governance proposal designed to introduce a fee controller and a target Compute Unit (CU) utilization limit to the network’s existing first-price auction fee model, a mechanism that currently forces users to guess how much to bid for inclusion, often resulting in overpayment and poor UX.
 
