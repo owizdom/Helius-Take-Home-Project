@@ -17,14 +17,19 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 2.  In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
-    Furthermore, the leading landing service address (87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743) accounted for 22% of all blocks built during the analyzed window, while Jito collectively landed over 40% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+    Furthermore, the leading landing service(87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743) accounted for 22% of all blocks built during the analyzed window, while Jito collectively landed over 40% of the blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
     This observation aligns with the kind of fee routing dynamics discussed in Benedict’s PFOF on Solana article, where swap routing, priority tips, and landing service incentives can materially impact how user fees are allocated and monetized.
      
 
 3. One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. Despite producing a similar number of blocks, some validators consistently processed far more transactions than others. 
 
-    For example, Jupiter `JupmVLmA8RoyTUbTMMuTtoPWHEiNQobxgTeGTrPNkzT` produced 11 blocks yet handled nearly 12,000 transactions, including 8 older transactions, while other validators producing only four blocks processed closer to 4,000–5,000 transactions. At the same time, all validators included transactions with a maximum age of up to 151 slots, showing that under congestion, significantly older transactions can still make it into blocks. This underscores how validator-level differences in block production and transaction intake can meaningfully influence latency and fairness on the network. 
+    For example, Jupiter `JupmVLmA8RoyTUbTMMuTtoPWHEiNQobxgTeGTrPNkzT` produced 11 blocks yet handled nearly 12,000 transactions, including 8 older transactions, while other validators producing only four blocks processed closer to 4,000–5,000 transactions, including an average of 5 or more transactions in blocks being built.
+    
+    This raises a natural question: why are some validators repeatedly including older transactions?
+The analysis indicates that this behavior cannot be explained by higher fees, suggesting that factors other than fee maximization such as landing service behaviour are driving transaction inclusion.
+
+    At the same time, all validators included transactions with a maximum age of up to 151 slots, showing that under congestion, significantly older transactions can still make it into blocks. This underscores how validator-level differences in block production and transaction intake can meaningfully influence latency and fairness on the network. 
 
     This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 

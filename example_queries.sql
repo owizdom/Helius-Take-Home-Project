@@ -19,12 +19,6 @@ SELECT
     -- Total fees
     SUM(total_fee) as total_fees_lamports,
     
-    -- Fee efficiency (lower = more overcharging relative to volume)
-    ROUND(
-        (AVG(total_fee / transaction_count)) / NULLIF(AVG(transaction_count), 0), 
-        2
-    ) as fee_efficiency_score,
-    
     -- Time range
     MIN(toDateTime(block_time)) as first_seen,
     MAX(toDateTime(block_time)) as last_seen
