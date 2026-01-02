@@ -12,8 +12,8 @@ During my analysis, I identified several particularly interesting patterns acros
 
 Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning. The query for this analysis is in the `example_queries.sql`
 
-    a. Pump.fun appeared in 307 blocks and processed 1,261 transactions, with an average fee of 183,030 lamports per transaction. Based on my analysis, the program overcharged users by 145.45%, resulting in a total excess cost of 136,760,625 lamports paid by users.
-    b. Flash appeared in 317 blocks and processed 1,207 transactions with an average fee of 710,410 lamports per transaction. Based on my analysis, the program overcharged users by 1000+%, resulting in a total excess cost of 779,661,341 lamports paid by users.
+    a. Pump.fun (program ID 6EF8r...F6P): appeared in 307 blocks, 1,261 txns, avg fee 183,030 lamports. Calculated to be +145.5% overcharge above normal, costing users an extra ~136,760,625 lamports in total.
+    b. FlashX (FLASHX8D...txB9): appeared in 317 blocks, 1,207 txns, avg fee 710,410 lamports. Overcharged by ~1000%+, totaling ~779,661,341 lamports extra paid.
 
 2.  In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
@@ -27,11 +27,9 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
     For example, Jupiter `JupmVLmA8RoyTUbTMMuTtoPWHEiNQobxgTeGTrPNkzT` produced 11 blocks yet handled nearly 12,000 transactions, including 8 older transactions, while other validators producing only four blocks processed closer to 4,000–5,000 transactions, including an average of 5 or more transactions in blocks being built.
     
     This raises a natural question: why are some validators repeatedly including older transactions?
-The analysis indicates that this behavior cannot be explained by higher fees, suggesting that factors other than fee maximization such as landing service behaviour are driving transaction inclusion.
+The analysis indicates that this behavior cannot be explained by higher fees, suggesting that factors other than fee maximization such as landing service behaviour are driving transaction inclusion. We compared fee distributions between well-ordered and poorly-ordered blocks and found no significant difference hence ruling out fees as the cause of including old blocks
 
     At the same time, all validators included transactions with a maximum age of up to 151 slots, showing that under congestion, significantly older transactions can still make it into blocks. This underscores how validator-level differences in block production and transaction intake can meaningfully influence latency and fairness on the network. 
-
-    This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 
 
 ## How to Run
