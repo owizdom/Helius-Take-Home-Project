@@ -27,7 +27,7 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 In the swap-focused scope of this analysis, the Jito landing service landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
-Jito collectively landed over 53% of th transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
+Jito collectively landed over 53% of the transactions in that blocks spread across the top 10 services, underscoring its dominant role in landing blocks.
 
 ## 3. Detecting Jito Bundles
 
