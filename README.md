@@ -4,7 +4,7 @@ A lightweight Rust application that ingests Solana block data and extracts meani
 
 # Interesting Findings
 
-**I created a 10-minute video explaining my extraction logic and walking through the analysis in real-time. Quick side note: I sometimes stutter, so please be patient; I may take a moment or two to get my words out.**
+**I created an 11-minute video explaining my extraction logic and walking through the analysis in real-time. Quick side note: I sometimes stutter, so please be patient; I may take a moment or two to get my words out.**
 
 [Official Demo Video](https://www.youtube.com/watch?v=bnSFTV40JbM)
 
