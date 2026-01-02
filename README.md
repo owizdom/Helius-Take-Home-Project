@@ -10,7 +10,7 @@ During my analysis, I identified several particularly interesting patterns acros
 
     In this context, overcharging means that transactions involving these programs exhibit abnormally high fees on a per-transaction basis, even after normalizing for congestion and transaction volume. At scale, this behavior would place them among the highest fee-consuming programs on Solana.
 
-Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning.
+    Furthermore, I delved deeper to find how much these programs are overpaying which could further help in investigating how much Jito is middlemanning.
 
     a. Pump.fun appeared in 307 blocks and processed 1,261 transactions, with an average fee of 183,030 lamports per transaction. Based on my analysis, the program overcharged users by 145.45%, resulting in a total excess cost of 136,760,625 lamports paid by users.
     b. Flash appeared in 317 blocks and processed 1,207 transactions with an average fee of 710,410 lamports per transaction. Based on my analysis, the program overcharged users by 1000+%, resulting in a total excess cost of 779,661,341 lamports paid by users.
