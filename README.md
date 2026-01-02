@@ -4,6 +4,8 @@ A lightweight Rust application that ingests Solana block data and extracts meani
 
 ## Interesting Findings
 
+**Note: These findings were obtained through analysis using the queries defined in `example_queries.sql`.**
+
 During my analysis, I identified several particularly interesting patterns across 358 blocks (390,697,210 to 390,697,568), including the following:
 
 1. The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks.
@@ -194,3 +196,8 @@ If I had more time, this is what I would build:
 - **Validator Behavior Classification:** Track how validators include transactions and bundles to see which ones follow the rules and which might be prioritizing private orderflow.
 - **Frontend Interface:** Build a simple web dashboard to visualize, making the data easier to explore and analyze.
 - **Build a model to continuously learn new fee and routing patterns over time, catching emerging strategies before they show up in aggregate metrics.**
+
+
+This is my submission for the Product Research Engineer role at Helius. I look forward to hearing from you. Thanks
+
+**Through my work, I shape understanding the way an artist shapes form; deliberately, patiently, and with intent.**
