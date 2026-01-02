@@ -72,7 +72,24 @@ Around 92% of Jito transactions appear in bundles, with most bundles containing 
       - Database: `solana`
       - Dashboard URL: `http://localhost:8123/play`
     
-    After entering your API keys, the application will start streaming and analyzing blocks. You can access the ClickHouse dashboard using the provided URL above to view your data and run queries.
+    After entering your API keys, the application will start streaming and analyzing blocks.
+
+4. **Viewing Results and Running Queries**
+
+    To see the analysis results and insights:
+    
+    1. **Open ClickHouse UI:** Navigate to `http://localhost:8123/play` in your browser
+    2. **Login:** Use the credentials shown in the setup menu:
+       - Username: `default`
+       - Password: `solana123` (or your configured password)
+    3. **Run Queries:** Copy queries from `example_queries.sql` and paste them into the ClickHouse UI query editor, then click "Run" to execute
+    
+    The `example_queries.sql` file contains pre-built queries for:
+    - Finding programs that overcharge users
+    - Analyzing Jito landing service dominance
+    - Detecting Jito bundles
+    - Fee analysis by transaction type
+    - And more insights discussed in the "Interesting Findings" section above
 
 ### Running Tests
 
@@ -112,7 +129,7 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 
 
 ### 3. `program_fee_analysis`
-**Why I Chose This**: Solana programs are closely comparable to Ethereum smart contracts and the Bitcoin UTXO account model, and their economics are a fundamental part of how the network functions. They allow analysts to understand what is happening on-chain, which programs are being used, the program types, total fees, and overall activity. In the same way that Ethereum contract economics and Bitcoin transaction economics are critical for understanding value flow on those networks, understanding program economics on Solana helps reveal revenue flows and how effectively programs use fees.
+**Why I Chose This**:  This allow analysts to understand what is happening on-chain, which programs are being used, the program types, total fees, and overall activity.
 
 **Key Fields**:
 - `program_name`: Human-readable program name (e.g., "Jupiter", "Raydium CLMM")
@@ -135,30 +152,6 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 4. The program IDs and landing address are mapped manually to names for better interpretability
 5. The application is centred around a CLI-based approach, focusing on precision in data delivery, and it uses the default ClickHouse UI to query and view the data.
 
-## The Signals I Decided to Extract
-
-### 1. **Programs That Overcharge Users**
-
-While analyzing Solana fees, I realized something subtle but important: total fees alone don't tell the real story. High fees can simply mean high usage. What actually matters is how expensive it is for a user to interact with a program each time.
-
-This signal identifies programs where users consistently pay more than they should, even after normalizing for congestion and transaction volume. During my analysis, I found that Pump.fun and FLASHX consistently cause users to pay significantly more in fees compared to comparable interactions in the same blocks.
-
-This analysis helps investigate how much services like Jito are middlemanning, as overpayment patterns can reveal the cost of routing through specific landing services.
-
-### 2. **How Transactions Are Landing**
-
-Understanding how transactions land—whether through Jito bundles, direct to leader, or through specific RPCs—is critical for understanding validator behavior and their role in the Solana network. This signal tracks landing services and quantifies how much blockspace is routed through specific infrastructure.
-
-This analysis is essential for MEV research on Solana, as it enables detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
-
-
-**Note:** Earlier this year, I wrote an article titled “Economic Implications of SIMD-253” exploring how a proposed improvement to Solana’s fee market could reshape network economics. In it, I break down SIMD-253, a governance proposal designed to introduce a fee controller and a target Compute Unit (CU) utilization limit to the network’s existing first-price auction fee model, a mechanism that currently forces users to guess how much to bid for inclusion, often resulting in overpayment and poor UX.
-
-Looking back, this article was foundational for how I think about fee behavior and design signals on Solana, including the new per-transaction and fee-efficiency signals I’ve been building. It helped me understand the deeper economics that drive fee pressure, block inclusion, and user cost, and ultimately informed how I analyze where inefficiencies and overcharging occur in real usage.
-
-**Link to article:**  
-**Economic Implications of SIMD-253 — Parallel Research (wisdom), March 18, 2025**  
-[Economic Implications of SIMD-253 — Parallel Research](https://parallelresearch.substack.com/p/economic-implications-of-simd-253)
 
 ## Trade-offs Made
 
@@ -175,14 +168,14 @@ Looking back, this article was foundational for how I think about fee behavior a
 
 ## What I'd Build Next
 
-If I had more time, this is what I would build:
+If I had more time, this is what I would build to address current limitations and enhance the analysis:
 
-- **MEV Opportunity Detection:** Look for blocks with unusual bundle sizes, fee patterns, or program combinations to find potential MEV extraction.  
-- **Validator Behavior Classification:** Track how validators include transactions and bundles to see which ones follow the rules and which might be prioritizing private orderflow.
-- **Frontend Interface:** Build a simple web dashboard to visualize, making the data easier to explore and analyze.
-- **Build a model to continuously learn new fee and routing patterns over time, catching emerging strategies before they show up in aggregate metrics.**
+- **Solscan v2 API Integration for Name Resolution:** Replace hardcoded program and address mappings with dynamic resolution using Solscan's v2 API. This would automatically resolve program names, account labels, and landing service identifiers, eliminating the need for manual maintenance and ensuring unknown programs/addresses are properly identified in analysis.
 
+- **Compute Unit (CU) Tracking and Fee Normalization:** Extract CU usage from transaction metadata and store it per-transaction. This would enable proper fee normalization (fee per CU) in the overpayment analysis, allowing us to distinguish between legitimate high-CU transactions and actual overcharging. Currently, we compare raw fees which can be misleading when programs have different compute requirements.
 
-This is my submission for the Product Research Engineer role at Helius. I look forward to hearing from you. Thanks
+- **Enhanced Bundle Detection:** Track all bundles in a block (not just the largest) and store the total number of transactions in bundles. This would fix the current limitation where we can only estimate bundle participation and enable accurate metrics like "percentage of transactions in bundles" rather than approximations.
 
-**Through my work, I shape understanding the way an artist shapes form; deliberately, patiently, and with intent.**
+- **Transaction Position Tracking:** Store individual transaction positions within blocks to enable exact ordering analysis, reordering detection, and fine-grained transaction scheduling behavior. This addresses the current trade-off where we aggregate at the block level but lose position-level insights.
+
+- **Historical Backfill Pipeline:** Add a separate ingestion pipeline that can backfill historical blocks without interfering with real-time analysis. This would enable analysis of past network behavior and trends over longer time periods.
