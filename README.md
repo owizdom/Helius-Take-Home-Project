@@ -90,15 +90,13 @@ The system uses **ClickHouse** for data storage, which is used for further analy
 **Why I Chose This**: After studying more on Solana blocks, this was the first part that made me think. Being able to figure out in what manner a block is landed—whether through Jito bundles, direct leader inclusion, or other MEV infrastructure—is critical for understanding validator behaviour and their role in the Solana network. This analysis is essential for MEV research on Solana, as it enables the detection of spam patterns, opportunity clusters, and the distribution of blockspace across different execution paths.
 
 **Key Fields**:
-- `unique_blockhashes`: Number of unique blockhashes in the block
-- `largest_blockhash_group`: Size of the largest blockhash cluster (indicates bundle size; larger groups suggest coordinated transaction groups)
-- `largest_blockhash`: The blockhash that appears most frequently in the block (identifies the dominant bundle or transaction group)
+- `largest_bundle_size`: Size of largest detected bundle (up to 5 transactions with same tip recipient). Bundles are detected by identifying sequential transactions that tip the same landing service account.
 - `validator_key`: Validator who built the block (enables validator-level behaviour analysis)
-- `landing_service`: Most common landing service identified in the block (The current implementation still shows empty due to it being unknown)
+- `landing_service`: Most common landing service identified in the block (e.g., Jito)
 - `landing_service_count`: Number of transactions using the identified landing service (quantifies how much blockspace is routed through specific infrastructure)
 
 ### 2. `fee_landscape` 
-**Why I Chose this**: I believe that despite Solana being known for low transaction costs due to its architecture, fees are often overlooked, so I decided to highlight their importance in my project. In an article I wrote earlier this year, I explained why Solana’s fee market and compute–unit dynamics are economically important, and that reasoning is exactly why I chose this schema. By analysing fee-ordering correlation, we can observe whether validators are ordering transactions by fees, which helps reveal potential MEV opportunities and clustered spam behaviour, while tracking compute-budget usage (Compute Units per transaction and per block) provides a clear signal of network growth, showing how rising computational demand reshapes validator load and fee dynamics over time.
+**Why I Chose this**: I believe that despite Solana being known for low transaction costs due to its architecture, fees are often overlooked, so I decided to highlight their importance in my project. In an article I wrote earlier this year, I explained why Solana's fee market and compute–unit dynamics are economically important, and that reasoning is exactly why I chose this schema. Tracking compute-budget usage (Compute Units per transaction and per block) provides a clear signal of network growth, showing how rising computational demand reshapes validator load and fee dynamics over time.
 
 Link to article: **Economic Implications of SIMD-253** — Parallel Research (wisdom), March 18, 2025  
 [Economic Implications of SIMD-253 — Parallel Research](https://parallelresearch.substack.com/p/economic-implications-of-simd-253)
@@ -106,7 +104,6 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 **Key Fields**:
 - `fee_avg`: Average fee per transaction in block
 - `compute_budget_percent`: Percentage of transactions using compute budget instructions
-- `fee_ordering_correlation`: Correlation between transaction position and fee (1.0 = perfect fee-based ordering)
 
 
 ### 3. `program_fee_analysis`
@@ -124,17 +121,6 @@ Link to article: **Economic Implications of SIMD-253** — Parallel Research (wi
 **Key Fields**:
 - `transaction_type`: Category (vote, system, spl_token, jupiter, raydium, orca, other)
 - `transaction_count`, `total_fee`: Aggregated metrics
-
-### 5. `transaction_age_analysis`
-**Why I Chose This**: Understanding how validators handle transaction scheduling is critical for detecting potential manipulation or unfair behavior. This schema tracks transaction age by looking up when blockhashes were first created, allowing us to identify validators that include very old transactions in their blocks. This is important because validators playing games with transaction scheduling might prioritize their own old transactions or manipulate inclusion order, which can affect network fairness and user experience.
-
-**Key Fields**:
-- `validator_key`: Validator who built the block
-- `max_transaction_age_slots`: Oldest transaction age in slots (identifies how stale transactions can get)
-- `avg_transaction_age_slots`: Average transaction age in slots (shows typical backlog age)
-- `old_transaction_count`: Number of transactions older than 150 slots (identifies validators including very old transactions)
-- `total_transactions`: Total number of transactions in the block
-
 
 ### Design Decisions I Made.
 
@@ -162,9 +148,9 @@ This analysis is essential for MEV research on Solana, as it enables detection o
 
 ### 3. **Validator Transaction Scheduling Behavior**
 
-One interesting validator-level signal that emerged is how unevenly transaction load and backlog age are distributed across block producers. This signal tracks how validators handle transaction scheduling, including whether they're playing games with transaction ordering or including very old transactions.
+One interesting validator-level signal that emerged is how unevenly transaction load is distributed across block producers. This signal tracks how validators handle transaction scheduling and block production.
 
-This highlights meaningful differences in how validators absorb transaction volume and backlog, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
+This highlights meaningful differences in how validators absorb transaction volume, which can materially affect latency, fairness, and user experience depending on which leader ultimately produces the block.
 
 
 **Note:** Earlier this year, I wrote an article titled “Economic Implications of SIMD-253” exploring how a proposed improvement to Solana’s fee market could reshape network economics. In it, I break down SIMD-253, a governance proposal designed to introduce a fee controller and a target Compute Unit (CU) utilization limit to the network’s existing first-price auction fee model, a mechanism that currently forces users to guess how much to bid for inclusion, often resulting in overpayment and poor UX.

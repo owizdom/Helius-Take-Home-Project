@@ -57,24 +57,7 @@ GROUP BY landing_service, ftt.transaction_type
 ORDER BY swap_fees_lamports DESC;
 
 -- ============================================================================
--- 3. Validators Including Old Transactions
-
-SELECT 
-    validator_key,
-    COUNT(DISTINCT slot) as blocks_produced,
-    SUM(total_transactions) as total_transactions,
-    SUM(old_transaction_count) as total_old_transactions,
-    ROUND(AVG(avg_transaction_age_slots), 2) as avg_transaction_age_slots,
-    ROUND(MAX(max_transaction_age_slots), 0) as max_transaction_age_slots
-FROM solana.transaction_age_analysis
-WHERE validator_key != ''
-GROUP BY validator_key
-HAVING SUM(old_transaction_count) > 0
-ORDER BY SUM(old_transaction_count) DESC
-LIMIT 50;
-
--- ============================================================================
--- 4. Pump.fun Overpayment Analysis (Jito Middlemanning Signal)
+-- 3. Pump.fun Overpayment Analysis (Jito Middlemanning Signal)
 
 WITH pump_fun_stats AS (
     SELECT 
@@ -103,3 +86,33 @@ SELECT
     ROUND((AVG(avg_fee_per_tx) - (SELECT overall_avg_fee_per_tx FROM overall_avg)) * SUM(transaction_count), 0) as total_overpayment_lamports,
     ROUND((AVG(avg_fee_per_tx) / NULLIF((SELECT overall_avg_fee_per_tx FROM overall_avg), 0) - 1) * 100, 2) as overpayment_percentage
 FROM pump_fun_stats;
+
+-- ============================================================================
+-- 4. Jito Bundle Statistics
+
+SELECT 
+    -- Bundle detection summary
+    COUNT(DISTINCT CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN slot END) as blocks_with_jito_bundles,
+    COUNT(DISTINCT CASE WHEN landing_service = 'Jito' THEN slot END) as blocks_with_jito_transactions,
+    
+    -- Bundle size statistics
+    ROUND(AVG(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN largest_bundle_size END), 2) as avg_bundle_size,
+    ROUND(quantile(0.5)(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN largest_bundle_size END), 0) as p50_bundle_size,
+    ROUND(quantile(0.9)(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN largest_bundle_size END), 0) as p90_bundle_size,
+    MAX(CASE WHEN landing_service = 'Jito' THEN largest_bundle_size END) as max_bundle_size,
+    
+    -- Transaction counts
+    SUM(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN landing_service_count ELSE 0 END) as total_jito_bundle_transactions,
+    SUM(CASE WHEN landing_service = 'Jito' THEN landing_service_count ELSE 0 END) as total_jito_transactions,
+    
+    -- Bundle count estimation (rough estimate: divide transactions by average bundle size)
+    ROUND(SUM(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN landing_service_count ELSE 0 END) / 
+          NULLIF(AVG(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN largest_bundle_size END), 0), 0) as estimated_bundle_count,
+    
+    -- Percentage of Jito transactions that are in bundles
+    ROUND(SUM(CASE WHEN landing_service = 'Jito' AND largest_bundle_size >= 2 THEN landing_service_count ELSE 0 END) * 100.0 / 
+          NULLIF(SUM(CASE WHEN landing_service = 'Jito' THEN landing_service_count ELSE 0 END), 0), 2) as pct_jito_txs_in_bundles
+
+FROM solana.bundling_analysis;
+
+-- ============================================================================

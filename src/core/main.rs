@@ -85,9 +85,6 @@ async fn initialize_database(client: &Client) -> Result<(), Box<dyn std::error::
     execute_schema_file(client, include_str!("../../clickhouse/schema_fee_by_type.sql"), "fee_by_transaction_type").await?;
     println!("  Created table: fee_by_transaction_type");
     
-    execute_schema_file(client, include_str!("../../clickhouse/schema_transaction_age.sql"), "transaction_age_analysis").await?;
-    println!("  Created table: transaction_age_analysis");
-    
     println!("Database initialized.\n");
     Ok(())
 }
@@ -100,7 +97,6 @@ async fn clear_database(client: &Client) -> Result<(), Box<dyn std::error::Error
         "program_fee_analysis",
         "fee_landscape",
         "fee_by_transaction_type",
-        "transaction_age_analysis",
     ];
     
     for table in tables {
@@ -113,23 +109,26 @@ async fn clear_database(client: &Client) -> Result<(), Box<dyn std::error::Error
     // Drop old/removed tables if they exist
     let drop_queries = vec![
         "DROP TABLE IF EXISTS solana.landing_method_analysis",
+        "DROP TABLE IF EXISTS solana.transaction_age_analysis",
     ];
     
     for query in drop_queries {
         let _ = client.query(query).execute().await;
     }
     
-    // Ensure bundling_analysis table has the correct columns
+    // Ensure bundling_analysis table has the correct columns (for migration from old schemas)
     let alter_queries = vec![
-        "ALTER TABLE bundling_analysis ADD COLUMN IF NOT EXISTS landing_service String DEFAULT ''",
-        "ALTER TABLE bundling_analysis ADD COLUMN IF NOT EXISTS landing_service_count UInt32 DEFAULT 0",
-        "ALTER TABLE bundling_analysis DROP COLUMN IF EXISTS jito_bundle_count",
-        "ALTER TABLE bundling_analysis DROP COLUMN IF EXISTS direct_leader_count",
+        "ALTER TABLE solana.bundling_analysis ADD COLUMN IF NOT EXISTS landing_service String DEFAULT ''",
+        "ALTER TABLE solana.bundling_analysis ADD COLUMN IF NOT EXISTS landing_service_count UInt32 DEFAULT 0",
+        "ALTER TABLE solana.bundling_analysis ADD COLUMN IF NOT EXISTS largest_bundle_size UInt32 DEFAULT 0",
     ];
     
     for query in alter_queries {
         let _ = client.query(query).execute().await;
     }
+    
+    // Remove fee_ordering_correlation column from fee_landscape if it exists
+    let _ = client.query("ALTER TABLE solana.fee_landscape DROP COLUMN IF EXISTS fee_ordering_correlation").execute().await;
     
     println!("Database cleared.\n");
     Ok(())

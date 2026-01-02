@@ -31,7 +31,7 @@ pub fn parse_transactions(
                                 UiInstruction::Parsed(parsed_instruction) => {
                                     match parsed_instruction {
                                         UiParsedInstruction::Parsed(instruction_parsed) => {
-                                            // Check if this is a System Program transfer (potential landing service tip)
+                                            // Check if this is a System Program transfer to a known tip account
                                             if instruction_parsed.program_id == "11111111111111111111111111111111" {
                                                 // The parsed field is already a Value, try to extract transfer info
                                                 if let Some(parsed_data) = instruction_parsed.parsed.as_object() {
@@ -43,17 +43,24 @@ pub fn parse_transactions(
                                                                 if let Some(destination) = info.get("destination").and_then(|v| v.as_str()) {
                                                                     // Extract tip amount (lamports)
                                                                     if let Some(lamports) = info.get("lamports").and_then(|v| v.as_u64()) {
-                                                                        // This is a tip transfer - store it
+                                                                        // Set tip_recipient for ANY System Program transfer (not just known tip accounts)
+                                                                        // This allows us to detect unknown landing services
                                                                         if tip_recipient.is_empty() && lamports > 0 {
                                                                             tip_recipient = destination.to_string();
                                                                             tip_amount = lamports;
                                                                         }
-                                                                    }
-                                                                    
-                                                                    // Check if this is a known landing service address
-                                                                    if let Some(service) = identify_landing_service(destination) {
-                                                                        if landing_service_found.is_empty() {
-                                                                            landing_service_found = service;
+                                                                        
+                                                                        // Check if this is a known landing service address
+                                                                        if let Some(service) = identify_landing_service(destination) {
+                                                                            if landing_service_found.is_empty() {
+                                                                                landing_service_found = service;
+                                                                            }
+                                                                        } else if !tip_recipient.is_empty() && tip_recipient == destination {
+                                                                            // Unknown landing service - set to "Unknown: {address}" format
+                                                                            // This matches the format used in bundling.rs
+                                                                            if landing_service_found.is_empty() {
+                                                                                landing_service_found = format!("Unknown: {}", destination);
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -84,6 +91,16 @@ pub fn parse_transactions(
                 let is_vote = program_ids.iter().any(|p| p.contains("Vote111111111111111111111111111111111111111"));
                 let is_system = program_ids.iter().any(|p| p == "11111111111111111111111111111111");
                 
+                // Set landing_service based on tip status
+                // If we have a tip but no known service, mark as unknown
+                if !tip_recipient.is_empty() && landing_service_found.is_empty() {
+                    landing_service_found = format!("Unknown: {}", tip_recipient);
+                }
+                // If we have no tip at all, mark as "No Tip"
+                if tip_recipient.is_empty() && landing_service_found.is_empty() {
+                    landing_service_found = "No Tip".to_string();
+                }
+                
                 let fee = transaction_with_meta.meta.as_ref().map(|m| m.fee).unwrap_or(0);
                 let failed = transaction_with_meta.meta.as_ref().map(|m| m.err.is_some()).unwrap_or(false);
                 
@@ -93,7 +110,7 @@ pub fn parse_transactions(
                 // Binary transaction - minimal data
                 let fee = transaction_with_meta.meta.as_ref().map(|m| m.fee).unwrap_or(0);
                 let failed = transaction_with_meta.meta.as_ref().map(|m| m.err.is_some()).unwrap_or(false);
-                (String::new(), fee, failed, false, false, false, Vec::new(), String::new(), String::new(), 0)
+                (String::new(), fee, failed, false, false, false, Vec::new(), "No Tip".to_string(), String::new(), 0)
             }
         };
         

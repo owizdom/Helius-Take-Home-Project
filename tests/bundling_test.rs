@@ -2,47 +2,72 @@ use solana_block_fetcher::analyzer::bundling::analyze_bundling;
 use solana_block_fetcher::analyzer::types::Transaction;
 
 #[test]
-fn test_blockhash_clustering() {
-    // Create 150 transactions with same blockhash
-    let mut transactions = Vec::new();
-    let bundle_blockhash = "bundle123".to_string();
-    
-    for i in 0..150 {
-        transactions.push(Transaction {
+fn test_bundle_detection_same_tip_recipient() {
+    // Create a bundle: 3 sequential transactions with same tip recipient
+    let jito_tip = "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt".to_string();
+    let transactions = vec![
+        Transaction {
             slot: 1000,
-            position: i + 1,
-            signature: format!("sig{}", i),
-            recent_blockhash: bundle_blockhash.clone(),
+            position: 1,
+            signature: "sig1".to_string(),
+            recent_blockhash: "bh1".to_string(),
             fee: 5000,
             failed: 0,
             has_compute_budget: 0,
             is_vote: 0,
             is_system: 0,
-            program_ids: vec!["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string()],
+            program_ids: vec![],
             landing_service: String::new(),
-            tip_recipient: String::new(),
-            tip_amount: 0,
-        });
-    }
+            tip_recipient: jito_tip.clone(),
+            tip_amount: 10000,
+        },
+        Transaction {
+            slot: 1000,
+            position: 2,
+            signature: "sig2".to_string(),
+            recent_blockhash: "bh2".to_string(),
+            fee: 5000,
+            failed: 0,
+            has_compute_budget: 0,
+            is_vote: 0,
+            is_system: 0,
+            program_ids: vec![],
+            landing_service: String::new(),
+            tip_recipient: jito_tip.clone(),
+            tip_amount: 10000,
+        },
+        Transaction {
+            slot: 1000,
+            position: 3,
+            signature: "sig3".to_string(),
+            recent_blockhash: "bh3".to_string(),
+            fee: 5000,
+            failed: 0,
+            has_compute_budget: 0,
+            is_vote: 0,
+            is_system: 0,
+            program_ids: vec![],
+            landing_service: String::new(),
+            tip_recipient: jito_tip.clone(),
+            tip_amount: 10000,
+        },
+    ];
     
     let result = analyze_bundling(&transactions, 1000, "blockhash".to_string(), 1234567890, "validator1".to_string());
     
-    assert_eq!(result.unique_blockhashes, 1);
-    assert_eq!(result.largest_blockhash_group, 150);
+    // Should detect bundle of size 3
+    assert_eq!(result.largest_bundle_size, 3);
 }
 
 #[test]
-fn test_multiple_blockhashes() {
-    // Create transactions with multiple blockhashes
-    let mut transactions = Vec::new();
-    
-    // 120 transactions with blockhash1
-    for i in 0..120 {
-        transactions.push(Transaction {
+fn test_no_bundles_no_tips() {
+    // Transactions without tips - no bundles should be detected
+    let transactions = vec![
+        Transaction {
             slot: 1000,
-            position: i + 1,
-            signature: format!("sig{}", i),
-            recent_blockhash: "blockhash1".to_string(),
+            position: 1,
+            signature: "sig1".to_string(),
+            recent_blockhash: "bh1".to_string(),
             fee: 5000,
             failed: 0,
             has_compute_budget: 0,
@@ -52,16 +77,12 @@ fn test_multiple_blockhashes() {
             landing_service: String::new(),
             tip_recipient: String::new(),
             tip_amount: 0,
-        });
-    }
-    
-    // 30 transactions with blockhash2
-    for i in 0..30 {
-        transactions.push(Transaction {
+        },
+        Transaction {
             slot: 1000,
-            position: 120 + i + 1,
-            signature: format!("sig{}", 120 + i),
-            recent_blockhash: "blockhash2".to_string(),
+            position: 2,
+            signature: "sig2".to_string(),
+            recent_blockhash: "bh2".to_string(),
             fee: 5000,
             failed: 0,
             has_compute_budget: 0,
@@ -71,12 +92,12 @@ fn test_multiple_blockhashes() {
             landing_service: String::new(),
             tip_recipient: String::new(),
             tip_amount: 0,
-        });
-    }
+        },
+    ];
     
     let result = analyze_bundling(&transactions, 1000, "blockhash".to_string(), 1234567890, "validator1".to_string());
     
-    assert_eq!(result.unique_blockhashes, 2);
-    assert_eq!(result.largest_blockhash_group, 120);
+    // No bundles detected (need at least 2 transactions with tips)
+    assert_eq!(result.largest_bundle_size, 0);
 }
 

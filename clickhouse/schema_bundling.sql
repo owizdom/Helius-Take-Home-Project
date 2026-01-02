@@ -8,9 +8,7 @@ CREATE TABLE IF NOT EXISTS bundling_analysis
     blockhash String,
     block_time UInt64,
 
-    unique_blockhashes UInt32,    -- the number of unique blockhashes in the block
-    largest_blockhash_group UInt32, -- the size of the largest blockhash cluster
-    largest_blockhash String,     -- the blockhash with most transactions
+    largest_bundle_size UInt32,   -- Size of largest detected bundle (up to 5 transactions with same tip recipient)
     
     validator_key String,         -- the validator key who built the block
     landing_service String,       -- most common landing service in block (empty if unknown)

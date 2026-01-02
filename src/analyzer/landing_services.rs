@@ -1,24 +1,25 @@
 use std::collections::HashMap;
 
-/// Known landing service tip addresses
-/// These are addresses that landing services use to receive tips
 pub fn get_landing_service_addresses() -> HashMap<String, String> {
-    let addresses = HashMap::new();
+    let mut addresses = HashMap::new();
     
-    // Nozomi tip addresses (add known addresses as discovered)
-    // addresses.insert("NozomiTipAddress1".to_string(), "Nozomi".to_string());
+    // Jito landing service and tip accounts
+    // These are all Jito tip accounts that route through the same landing service
+    let jito_addresses = vec![
+        "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt", // Jito landing service
+        "87wyLh2iDzszjYTPi5tnDhRx5GGrxzWsRAUbBboVm743", // Jito tip account
+        "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49", // Jito tip account
+        "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY", // Jito tip account
+        "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe", // Jito tip account
+        "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh", // Jito tip account
+        "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5", // Jito tip account
+        "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT", // Jito tip account
+        "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL", // Jito tip account
+    ];
     
-    // Zero Slot tip addresses
-    // addresses.insert("ZeroSlotTipAddress1".to_string(), "Zero Slot".to_string());
-    
-    // Bloxroute tip addresses
-    // addresses.insert("BloxrouteTipAddress1".to_string(), "Bloxroute".to_string());
-    
-    // Astralane tip addresses
-    // addresses.insert("AstralaneTipAddress1".to_string(), "Astralane".to_string());
-    
-    // Helius tip addresses
-    // addresses.insert("HeliusTipAddress1".to_string(), "Helius".to_string());
+    for addr in jito_addresses {
+        addresses.insert(addr.to_string(), "Jito".to_string());
+    }
     
     addresses
 }

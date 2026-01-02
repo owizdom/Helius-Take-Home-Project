@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS fee_landscape
     block_time UInt64,
     fee_avg Float64,
     compute_budget_percent Float32,
-    fee_ordering_correlation Float32,
     created_at DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
