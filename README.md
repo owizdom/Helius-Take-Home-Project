@@ -10,7 +10,7 @@ During my analysis, I identified several particularly interesting patterns acros
 
 ## 1. Solana Program That Overcharges
 
-Screenshot 2026-01-02 at 13.13.43.png
+<img width="1714" height="778" alt="Screenshot 2026-01-02 at 13 13 43" src="https://github.com/user-attachments/assets/bb914275-fcdf-4c94-a0bf-1f1f20f70c8f" />
 
 The Solana programs Pump.fun (6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P) and FLASHX (FLASHX8DrLbgeR8FcfNV1F5krxYcYMUdBkrP1EPBtxB9) consistently cause users to pay more in fees compared to comparable interactions in the same blocks, amongst others like King...cb7T and term...ZzN3.
 
@@ -23,7 +23,7 @@ Furthermore, I delved deeper to find how much these programs are overpaying whic
 
 ## 2. Jito Landing Service Dominance in Swap Transactions
 
-Screenshot 2026-01-02 at 13.30.31.png
+<img width="1709" height="751" alt="Screenshot 2026-01-02 at 13 30 31" src="https://github.com/user-attachments/assets/817944b5-4348-4be4-a9f5-a2839970d900" />
 
 In the swap-focused scope of this analysis, the Jito landing service (ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt) landed the highest number of transactions. Other tip-related accounts, such as JitoTip5 or JitoTip3, also appear prominently, but these are merely distinct tip wallets used to spread load and reduce contention, they all ultimately route through the same Jito landing service rather than represent separate providers.
 
@@ -33,7 +33,7 @@ This observation aligns with the kind of fee routing dynamics discussed in Bened
 
 ## 3. Detecting Jito Bundles
 
-Screenshot 2026-01-02 at 13.22.55.png
+<img width="1714" height="726" alt="Screenshot 2026-01-02 at 13 22 55" src="https://github.com/user-attachments/assets/5cb3e1a9-547b-46f1-9fb0-ab50ce163f3b" />
 
 Around 92% of Jito transactions appear in bundles, with most bundles containing 3–4 sequential transactions. This demonstrates a deliberate strategy of grouping transactions, which can influence transaction ordering, fee distribution, and block dynamics. The high consistency of these bundles suggests a structured approach rather than random sequencing, pointing toward optimization for both execution efficiency and potential MEV capture.
 
